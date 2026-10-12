@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+  <title>Loup-Garou — Serveur</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(#1a1f3d, #0f1226); color: #eef0ff; }
+    .card { width: min(420px, 90vw); padding: 28px; border-radius: 20px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); }
+    h1 { margin: 0 0 6px; font-size: 26px; }
+    p { color: #a3a8cc; line-height: 1.45; }
+    input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); color: inherit; font-size: 16px; }
+    button { margin-top: 14px; width: 100%; padding: 12px; border: none; border-radius: 10px; background: #ffcc66; color: #1b1300; font-weight: 700; font-size: 16px; cursor: pointer; }
+    .error { color: #e8505b; }
+  </style>
+</head>
+<body>
+  <form class="card" id="form">
+    <h1>🐺 Loup-Garou</h1>
+    <p>Entre l'adresse du serveur de jeu (donnée par l'organisateur), par exemple <code>https://loup.mondomaine.fr</code>.</p>
+    <p class="error" id="error"></p>
+    <input id="url" type="url" required placeholder="https://…">
+    <button>Se connecter</button>
+  </form>
+  <script>
+    const error = new URLSearchParams(location.search).get('error');
+    if (error) document.getElementById('error').textContent = error;
+    window.loupDesktop.getConfig().then((c) => (document.getElementById('url').value = c.serverUrl || ''));
+    document.getElementById('form').onsubmit = (e) => {
+      e.preventDefault();
+      window.loupDesktop.setServer(document.getElementById('url').value.trim());
+    };
+  </script>
+</body>
+</html>

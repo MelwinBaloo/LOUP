@@ -1,0 +1,33 @@
+{
+  "name": "loup-garou-desktop",
+  "productName": "Loup-Garou",
+  "version": "1.0.0",
+  "description": "Loup-Garou en ligne avec chat vocal — application Windows",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "fr.loupgarou.app",
+    "productName": "Loup-Garou",
+    "files": ["main.js", "preload.js", "setup.html", "build/icon.png"],
+    "directories": { "output": "dist" },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Loup-Garou",
+      "language": "1036"
+    }
+  }
+}

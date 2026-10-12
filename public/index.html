@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Loup-Garou en ligne</title>
+  <meta name="description" content="Jouez au Loup-Garou entre amis avec chat vocal, sur navigateur, smartphone et Windows.">
+  <meta name="theme-color" content="#0f1226">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="night">
+  <div class="sky" aria-hidden="true"><div class="moon"></div></div>
+
+  <!-- Accueil -->
+  <main id="home" class="screen">
+    <div class="home-card">
+      <img src="icons/icon.svg" alt="" class="logo">
+      <h1>Loup-Garou</h1>
+      <p class="tagline">Le village s'endort… avec le chat vocal.</p>
+
+      <label for="name">Ton pseudo</label>
+      <input id="name" maxlength="20" autocomplete="nickname" placeholder="ex : Marie">
+
+      <button id="create" class="btn primary">Créer une partie</button>
+
+      <div class="divider"><span>ou</span></div>
+
+      <label for="code">Code de la partie</label>
+      <div class="row">
+        <input id="code" maxlength="5" placeholder="ABCDE" autocapitalize="characters" autocomplete="off">
+        <button id="join" class="btn">Rejoindre</button>
+      </div>
+      <p id="home-error" class="error" role="alert"></p>
+      <button id="install" class="btn ghost hidden">📲 Installer l'application</button>
+    </div>
+  </main>
+
+  <!-- Partie -->
+  <main id="game" class="screen hidden">
+    <header class="topbar">
+      <button id="leave" class="icon-btn" title="Quitter">←</button>
+      <div class="phase">
+        <div id="phase-label">Salon</div>
+        <div id="timer" class="timer"></div>
+      </div>
+      <button id="share" class="code-pill" title="Inviter des amis">#<span id="room-code"></span></button>
+    </header>
+
+    <div class="layout">
+      <section class="board">
+        <div id="role-card" class="role-card hidden"></div>
+        <div id="prompt" class="prompt"></div>
+        <div id="players" class="players"></div>
+        <div id="controls" class="controls"></div>
+      </section>
+
+      <aside class="side">
+        <div class="tabs">
+          <button class="tab active" data-tab="chat">💬 Chat</button>
+          <button class="tab" data-tab="log">📜 Journal</button>
+        </div>
+        <div id="tab-chat" class="tab-panel">
+          <ul id="chat" class="feed"></ul>
+          <form id="chat-form" class="chat-form">
+            <input id="chat-input" maxlength="300" placeholder="Écrire un message…" autocomplete="off">
+            <button class="btn small">Envoyer</button>
+          </form>
+        </div>
+        <div id="tab-log" class="tab-panel hidden">
+          <ul id="log" class="feed"></ul>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="voicebar">
+      <button id="mic" class="voice-btn" title="Micro">🎙️<span>Micro</span></button>
+      <button id="deafen" class="voice-btn" title="Son">🔊<span>Son</span></button>
+      <div id="voice-status" class="voice-status"></div>
+    </footer>
+  </main>
+
+  <div id="overlay" class="overlay hidden"></div>
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script src="socket.io/socket.io.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
