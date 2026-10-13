@@ -40,6 +40,14 @@ docker build -t loup-garou .
 docker run -p 3000:3000 loup-garou
 ```
 
+### Mettre le jeu en ligne gratuitement (Render)
+
+1. Crée un compte sur [render.com](https://render.com) avec ton compte GitHub.
+2. *New* → *Blueprint* → choisis le dépôt `LOUP` : Render lit `render.yaml` et déploie tout seul.
+3. Au bout de 2–3 minutes tu obtiens une adresse `https://loup-garou-xxxx.onrender.com` (HTTPS inclus) : c'est le lien à envoyer à tes amis.
+
+Le plan gratuit met le serveur en veille après 15 min sans visite : le premier chargement prend alors ~1 min.
+
 ### Mise en ligne (important pour le vocal)
 
 - Le micro ne fonctionne qu'en **HTTPS** (sauf sur `localhost`). Héberge le serveur derrière un certificat, par exemple sur Render, Railway, Fly.io ou un VPS avec Caddy ou Nginx.

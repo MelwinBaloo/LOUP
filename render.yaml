@@ -1,0 +1,12 @@
+# Déploiement en un clic sur Render (https://render.com) : New → Blueprint → choisir ce dépôt.
+services:
+  - type: web
+    name: loup-garou
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
