@@ -114,7 +114,7 @@ body.day .sun { transform: none; opacity: 1; animation: sunpulse 6s ease-in-out 
 body.night .fog { opacity: 1; }
 @keyframes drift { to { transform: translateX(15%); } }
 
-.village { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 140px; }
+.village { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(120px, 11.7vw, 320px); }
 .village .hill { fill: var(--hill); transition: fill var(--sky-speed); }
 .village .win { fill: #2a1a0a; transition: fill var(--sky-speed); }
 body.night .village .win.lit, body.dusk .village .win { fill: #ffcc5c; filter: drop-shadow(0 0 4px #ffb02e); }
