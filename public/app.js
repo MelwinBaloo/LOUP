@@ -26,8 +26,10 @@ const el = (tag, props = {}, ...children) => {
 };
 
 // Identifiant persistant : permet de revenir dans la partie après une coupure.
-const playerId = localStorage.getItem('lg-id') || crypto.randomUUID?.() || Math.random().toString(36).slice(2) + Date.now().toString(36);
-localStorage.setItem('lg-id', playerId);
+// Un identifiant par onglet (sessionStorage) : deux onglets du même navigateur sont deux joueurs distincts,
+// et un rechargement de la page garde le même joueur.
+const playerId = sessionStorage.getItem('lg-id') || crypto.randomUUID?.() || Math.random().toString(36).slice(2) + Date.now().toString(36);
+sessionStorage.setItem('lg-id', playerId);
 
 const socket = io({ transports: ['websocket', 'polling'] });
 const voice = new Voice({
@@ -116,7 +118,21 @@ socket.on('connect', async () => {
   }
 });
 
-socket.on('disconnect', () => toast('Connexion perdue, reconnexion…'));
+socket.on('disconnect', (reason) => {
+  if (reason !== 'io server disconnect') toast('Connexion perdue, reconnexion…');
+});
+
+// Le même joueur s'est reconnecté ailleurs (autre appareil, onglet dupliqué) : cet onglet est libéré.
+socket.on('replaced', () => {
+  sessionStorage.removeItem('lg-room');
+  sessionStorage.removeItem('lg-id');
+  state = null;
+  lastPhaseKey = '';
+  voice.closeAll();
+  document.body.className = 'dusk';
+  showScreen('home');
+  homeError('Tu as rejoint cette partie depuis une autre fenêtre. Recharge la page pour jouer ici.');
+});
 
 socket.on('state', (s) => {
   clockOffset = s.serverNow - Date.now();

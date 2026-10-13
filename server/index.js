@@ -97,7 +97,10 @@ function createServer() {
       room.sockets.set(id, socket);
       room.emptySince = null;
       // Ancien onglet du même joueur : on le coupe (son `leave` verra qu'il n'est plus le socket actif).
-      if (previous && previous !== socket) previous.disconnect(true);
+      if (previous && previous !== socket) {
+        previous.emit('replaced');
+        previous.disconnect(true);
+      }
       return { code: room.game.code };
     }
 
