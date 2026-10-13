@@ -194,8 +194,22 @@ h1 { text-align: center; margin: 8px 0 0; font-size: 34px; letter-spacing: 1px; 
 .icon-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; padding: 4px 8px; }
 .phase { flex: 1; min-width: 0; }
 #phase-label { font-weight: 700; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.timer { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; }
-.timer.urgent { color: var(--wolf); font-weight: 700; }
+.topbar { position: sticky; }
+.timer {
+  display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px;
+  background: var(--card-strong); border: 2px solid var(--accent);
+  font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 800; letter-spacing: 1px;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 35%, transparent);
+  transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.timer-icon { font-size: 18px; }
+.timer.urgent { border-color: var(--wolf); color: #fff; background: color-mix(in srgb, var(--wolf) 75%, transparent); box-shadow: 0 0 22px var(--wolf); animation: timerPulse 1s ease-in-out infinite; }
+.timer.critical { animation-duration: 0.5s; }
+@keyframes timerPulse { 50% { transform: scale(1.08); } }
+.timebar { position: absolute; left: 0; right: 0; bottom: -1px; height: 4px; background: transparent; }
+#timebar-fill { height: 100%; width: 0; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width 0.25s linear, background 0.3s; }
+#timebar-fill.urgent { background: var(--wolf); box-shadow: 0 0 12px var(--wolf); }
+@media (max-width: 700px) { .timer { font-size: 20px; padding: 4px 10px; } .timer-icon { font-size: 15px; } }
 .code-pill {
   border: 1px solid var(--card-strong); background: var(--card); color: var(--text);
   border-radius: 999px; padding: 6px 12px; font-weight: 700; letter-spacing: 2px; cursor: pointer;
@@ -378,3 +392,25 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.7; }
 }
 #mic.off::after { display: none; }
 @media (max-width: 700px) { .speakers { white-space: normal; font-size: 13px; line-height: 1.25; } }
+
+/* ---------- Conteur ---------- */
+
+.narrator {
+  display: flex; gap: 14px; align-items: flex-start; margin-bottom: 12px; padding: 14px 18px;
+  border-radius: var(--radius); background: var(--card); border: 1px solid var(--card-strong);
+  border-left: 5px solid var(--accent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.narrator-icon { font-size: 30px; line-height: 1; }
+.narrator-title { font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+#narrator-text { margin: 4px 0 0; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 17px; line-height: 1.45; }
+.narrator.fresh { animation: narratorIn 0.9s ease; }
+.narrator.fresh #narrator-text { animation: inkIn 1.6s ease; }
+@keyframes narratorIn { from { box-shadow: 0 0 0 0 var(--accent); transform: translateY(-6px); } 40% { box-shadow: 0 0 28px 2px color-mix(in srgb, var(--accent) 55%, transparent); } }
+@keyframes inkIn { from { opacity: 0; filter: blur(4px); letter-spacing: 1px; } to { opacity: 1; filter: none; } }
+#narrate.off { background: color-mix(in srgb, var(--wolf) 35%, transparent); }
+@media (max-width: 700px) {
+  .narrator { padding: 10px 12px; gap: 10px; }
+  .narrator-icon { font-size: 22px; }
+  #narrator-text { font-size: 15px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .narrator.expanded #narrator-text { -webkit-line-clamp: unset; }
+}

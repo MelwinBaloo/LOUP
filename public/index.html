@@ -78,13 +78,21 @@
       <button id="leave" class="icon-btn" title="Quitter">←</button>
       <div class="phase">
         <div id="phase-label">Salon</div>
-        <div id="timer" class="timer"></div>
       </div>
+      <div id="timer" class="timer hidden" role="timer" aria-live="off"><span class="timer-icon">⏳</span><span id="timer-text">0:00</span></div>
       <button id="share" class="code-pill" title="Inviter des amis">#<span id="room-code"></span></button>
+      <div class="timebar" aria-hidden="true"><div id="timebar-fill"></div></div>
     </header>
 
     <div class="layout">
       <section class="board">
+        <div id="narrator" class="narrator hidden" aria-live="polite">
+          <div class="narrator-icon">📖</div>
+          <div class="narrator-body">
+            <div class="narrator-title">Le conteur</div>
+            <p id="narrator-text"></p>
+          </div>
+        </div>
         <div id="role-card" class="role-card hidden"></div>
         <div id="prompt" class="prompt"></div>
         <div id="players" class="players"></div>
@@ -121,6 +129,7 @@
     <footer class="voicebar">
       <button id="mic" class="voice-btn" title="Micro">🎙️<span>Micro</span></button>
       <button id="deafen" class="voice-btn" title="Son">🔊<span>Son</span></button>
+      <button id="narrate" class="voice-btn" title="Voix du conteur">📖<span>Conteur</span></button>
       <div id="speakers" class="speakers"></div>
       <div id="voice-status" class="voice-status"></div>
     </footer>

@@ -142,6 +142,7 @@ socket.on('state', (s) => {
   voice.update(s);
   onPhaseChange(previous, s);
   render();
+  narrateUpdates(previous, s);
 });
 
 socket.on('chat', (m) => addChat(m));
@@ -536,19 +537,195 @@ document.addEventListener('pointerdown', () => {
   }
 });
 
+// ---------- Conteur ----------
+
+const ROLE_ARTICLE = {
+  werewolf: 'un Loup-Garou',
+  villager: 'un simple Villageois',
+  seer: 'la Voyante',
+  witch: 'la Sorcière',
+  hunter: 'le Chasseur',
+};
+
+const narrator = {
+  gameKey: null,
+  seen: new Set(),
+  voiceOn: (() => {
+    try {
+      return localStorage.getItem('lg-narrator') !== 'off';
+    } catch {
+      return true;
+    }
+  })(),
+};
+
+const logKey = (e) => `${e.at}|${e.type}|${e.text}`;
+
+// Transforme un événement du journal en phrase de conte.
+function story(e, s) {
+  const role = ROLE_ARTICLE[e.role] || '';
+  switch (e.type) {
+    case 'start':
+      return 'Bienvenue à Thiercelieux. Cette nuit, des loups-garous se cachent parmi vous… Découvrez votre rôle, et gardez-le secret.';
+    case 'night':
+      return `La nuit ${s.round} tombe sur le village. Tout le monde ferme les yeux… Les loups-garous se réveillent et choisissent leur proie. La voyante, elle, ouvre les yeux pour percer un secret.`;
+    case 'dawn':
+      return e.count === 0
+        ? 'Le soleil se lève sur Thiercelieux… Miracle ! Personne n\'est mort cette nuit.'
+        : 'Le soleil se lève sur Thiercelieux… mais le village découvre un terrible spectacle.';
+    case 'death':
+      if (e.cause === 'vote') return `Le village a tranché : ${e.name} est conduit au bûcher. C'était ${role}.`;
+      if (e.cause === 'hunter') return `Pan ! ${e.name} s'effondre sous la balle du chasseur. C'était ${role}.`;
+      return `Au petit matin, on découvre le corps de ${e.name}. C'était ${role}.`;
+    case 'day':
+      return 'Les villageois se rassemblent sur la place. Débattez : qui parmi vous cache des crocs ?';
+    case 'vote':
+      return 'L\'heure du jugement a sonné. Chacun doit désigner celui qu\'il soupçonne !';
+    case 'vote-result':
+      return 'Le village n\'arrive pas à se mettre d\'accord… Personne ne sera exécuté aujourd\'hui.';
+    case 'hunter':
+      return e.missed ? 'Le chasseur rend son dernier souffle sans avoir tiré.' : 'Le chasseur, blessé à mort, épaule son fusil une dernière fois…';
+    case 'end':
+      return e.winner === 'village'
+        ? 'Le dernier loup-garou est tombé. Thiercelieux est enfin en paix : victoire des villageois !'
+        : 'Plus personne ne peut résister… Les loups-garous règnent désormais sur Thiercelieux !';
+    case 'private':
+      return e.playerId ? `Ta boule de cristal s'illumine : ${playerName(e.playerId)} est ${role}.` : e.text;
+    default:
+      return e.text;
+  }
+}
+
+function narrateUpdates(prev, s) {
+  const gameKey = `${s.code}-${s.gameId || 'salon'}`;
+  // Nouvelle partie ou arrivée en cours de route : on ne raconte pas le passé.
+  if (gameKey !== narrator.gameKey && prev && prev.code === s.code && narrator.gameKey) {
+    // La partie vient de démarrer sous nos yeux : on raconte tout depuis le début.
+    narrator.gameKey = gameKey;
+    narrator.seen = new Set();
+  } else if (gameKey !== narrator.gameKey) {
+    narrator.gameKey = gameKey;
+    narrator.seen = new Set(s.log.map(logKey));
+    if (s.phase === 'lobby') showNarration('Le conteur attend que tous les villageois soient réunis autour du feu…', false);
+    else {
+      const last = s.log.filter((e) => e.type !== 'private').at(-1);
+      if (last) showNarration(story(last, s), false);
+    }
+    return;
+  }
+  const spoken = [];
+  const shown = [];
+  for (const e of s.log) {
+    const key = logKey(e);
+    if (narrator.seen.has(key)) continue;
+    narrator.seen.add(key);
+    const line = story(e, s);
+    shown.push(line);
+    // Les révélations privées ne sont jamais lues à voix haute.
+    if (e.type !== 'private') spoken.push(line);
+  }
+  if (prev && prev.phase !== 'witch' && s.phase === 'witch') {
+    const line = 'Les loups-garous se rendorment, repus. La sorcière se réveille et contemple ses potions…';
+    shown.push(line);
+    spoken.push(line);
+  }
+  if (shown.length) showNarration(shown.join(' '), true, spoken);
+}
+
+function showNarration(text, animate, spoken = []) {
+  const box = $('#narrator');
+  const p = $('#narrator-text');
+  box.classList.remove('hidden');
+  p.textContent = text;
+  box.classList.remove('expanded');
+  if (animate) {
+    box.classList.remove('fresh');
+    void box.offsetWidth;
+    box.classList.add('fresh');
+  }
+  for (const line of spoken) speak(line);
+}
+
+function pickFrenchVoice() {
+  const voices = window.speechSynthesis?.getVoices() || [];
+  const fr = voices.filter((v) => v.lang?.toLowerCase().startsWith('fr'));
+  return fr.find((v) => /google|thomas|amelie|amélie|denise|henri/i.test(v.name)) || fr[0] || null;
+}
+
+function speak(text) {
+  if (!narrator.voiceOn || voice.deafened || !window.speechSynthesis) return;
+  const clean = text.replace(/[\p{Extended_Pictographic}\uFE0F]/gu, '').trim();
+  if (!clean) return;
+  const u = new SpeechSynthesisUtterance(clean);
+  u.lang = 'fr-FR';
+  const v = pickFrenchVoice();
+  if (v) u.voice = v;
+  u.rate = 0.95;
+  u.pitch = 0.85;
+  u.volume = 0.9;
+  speechSynthesis.speak(u);
+}
+
+function renderNarrateButton() {
+  const b = $('#narrate');
+  b.classList.toggle('off', !narrator.voiceOn);
+  b.title = narrator.voiceOn ? 'Couper la voix du conteur' : 'Activer la voix du conteur';
+}
+
+$('#narrator').onclick = () => $('#narrator').classList.toggle('expanded');
+
+$('#narrate').onclick = () => {
+  narrator.voiceOn = !narrator.voiceOn;
+  try {
+    localStorage.setItem('lg-narrator', narrator.voiceOn ? 'on' : 'off');
+  } catch {}
+  if (!narrator.voiceOn) speechSynthesis?.cancel();
+  else speak('Le conteur est de retour.');
+  renderNarrateButton();
+};
+renderNarrateButton();
+window.speechSynthesis?.getVoices(); // précharge la liste des voix
+
 // ---------- Divers ----------
+
+let lastTickSecond = null;
 
 function tick() {
   const t = $('#timer');
+  const fill = $('#timebar-fill');
   if (!state?.deadline) {
-    t.textContent = '';
+    t.classList.add('hidden');
+    fill.style.width = '0%';
     return;
   }
-  const left = Math.max(0, Math.round((state.deadline - (Date.now() + clockOffset)) / 1000));
-  t.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+  const leftMs = Math.max(0, state.deadline - (Date.now() + clockOffset));
+  const left = Math.ceil(leftMs / 1000);
+  t.classList.remove('hidden');
+  $('#timer-text').textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
   t.classList.toggle('urgent', left <= 10);
+  t.classList.toggle('critical', left <= 5);
+  const total = (state.duration || 60) * 1000;
+  fill.style.width = `${Math.min(100, (leftMs / total) * 100)}%`;
+  fill.classList.toggle('urgent', left <= 10);
+  // Petit « tic » pendant les 5 dernières secondes.
+  if (left <= 5 && left > 0 && left !== lastTickSecond && !voice.deafened) beep(left === 1 ? 880 : 660);
+  lastTickSecond = left;
 }
-setInterval(tick, 500);
+
+function beep(freq) {
+  const ctx = voice.audioCtx;
+  if (!ctx || ctx.state !== 'running') return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.16);
+}
+setInterval(tick, 250);
 
 async function share() {
   const url = `${location.origin}${location.pathname}?code=${state.code}`;
@@ -569,6 +746,8 @@ $('#leave').onclick = async () => {
   state = null;
   lastPhaseKey = '';
   voice.closeAll();
+  window.speechSynthesis?.cancel();
+  narrator.gameKey = null;
   document.body.className = 'dusk';
   history.replaceState(null, '', location.pathname);
   showScreen('home');

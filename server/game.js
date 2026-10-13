@@ -141,6 +141,7 @@ class Game {
   setPhase(phase, seconds) {
     this.clearTimer();
     this.phase = phase;
+    this.duration = seconds || null;
     if (seconds) {
       this.deadline = Date.now() + seconds * 1000;
       this.timer = this.scheduler.set(() => {
@@ -199,8 +200,8 @@ class Game {
     if (this.night.victim && !this.night.heal) deaths.push(this.night.victim);
     if (this.night.poison && !deaths.includes(this.night.poison)) deaths.push(this.night.poison);
     this.clearTimer();
-    if (deaths.length === 0) this.addLog('dawn', 'Le jour se lève : personne n\'est mort cette nuit.');
-    else this.addLog('dawn', 'Le jour se lève.');
+    if (deaths.length === 0) this.addLog('dawn', 'Le jour se lève : personne n\'est mort cette nuit.', { count: 0 });
+    else this.addLog('dawn', 'Le jour se lève.', { count: deaths.length });
     this.kill(deaths, 'night', () => this.startDay());
   }
 
@@ -258,7 +259,7 @@ class Game {
       if (!p || !p.alive) continue;
       p.alive = false;
       const how = cause === 'night' ? 'a été retrouvé(e) mort(e)' : cause === 'vote' ? 'a été éliminé(e) par le village' : 'a été abattu(e) par le chasseur';
-      this.addLog('death', `${p.name} ${how}. C'était ${roleLabel(p.role)}.`, { playerId: id, role: p.role });
+      this.addLog('death', `${p.name} ${how}. C'était ${roleLabel(p.role)}.`, { playerId: id, role: p.role, name: p.name, cause });
       if (p.role === 'hunter') hunterDied = id;
     }
     if (hunterDied && this.alive().length > 0) {
@@ -278,7 +279,7 @@ class Game {
     this.clearTimer();
     if (target) this.kill([target], 'hunter', then);
     else {
-      this.addLog('hunter', 'Le chasseur meurt sans tirer.');
+      this.addLog('hunter', 'Le chasseur meurt sans tirer.', { missed: true });
       if (!this.checkWin()) then();
     }
   }
@@ -292,7 +293,7 @@ class Game {
     else if (wolves >= others) winner = 'wolves';
     if (!winner) return false;
     this.winner = winner;
-    this.addLog('end', winner === 'village' ? 'Les villageois ont éliminé tous les loups. Victoire du village !' : 'Les loups-garous ont dévoré le village. Victoire des loups !');
+    this.addLog('end', winner === 'village' ? 'Les villageois ont éliminé tous les loups. Victoire du village !' : 'Les loups-garous ont dévoré le village. Victoire des loups !', { winner });
     this.setPhase('ended');
     this.changed();
     return true;
@@ -459,6 +460,7 @@ class Game {
       phase: this.phase,
       round: this.round,
       deadline: this.deadline,
+      duration: this.duration || null,
       serverNow: Date.now(),
       hostId: this.hostId,
       winner: this.winner,
