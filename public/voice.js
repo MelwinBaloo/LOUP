@@ -22,7 +22,8 @@ export class Voice {
       .then((r) => r.json())
       .then((c) => c.iceServers && (this.iceServers = c.iceServers))
       .catch(() => {});
-    setInterval(() => this.detectSpeaking(), 150);
+    this.lastLoud = new Map(); // playerId -> dernier instant où le niveau était audible
+    setInterval(() => this.detectSpeaking(), 100);
   }
 
   async enableMic() {
@@ -182,17 +183,25 @@ export class Voice {
   }
 
   detectSpeaking() {
-    const speaking = new Set();
+    const now = performance.now();
+    const loud = new Set();
     const level = ({ analyser, data }) => {
       analyser.getByteTimeDomainData(data);
       let sum = 0;
       for (const v of data) sum += (v - 128) * (v - 128);
       return Math.sqrt(sum / data.length);
     };
-    if (this.localAnalyser && this.localTrack?.enabled && this.policy.talkTo.length && level(this.localAnalyser) > 6) speaking.add(this.myId);
+    if (this.localAnalyser && this.localTrack?.enabled && this.policy.talkTo.length && level(this.localAnalyser) > 6) loud.add(this.myId);
     const hear = new Set(this.policy.hearFrom);
     for (const [id, peer] of this.peers) {
-      if (peer.analyser && hear.has(id) && level(peer.analyser) > 6) speaking.add(id);
+      if (peer.analyser && hear.has(id) && level(peer.analyser) > 6) loud.add(id);
+    }
+    for (const id of loud) this.lastLoud.set(id, now);
+    // On garde l'indicateur allumé 400 ms pour qu'il ne clignote pas entre deux syllabes.
+    const speaking = new Set();
+    for (const [id, t] of this.lastLoud) {
+      if (now - t < 400) speaking.add(id);
+      else this.lastLoud.delete(id);
     }
     const changed = speaking.size !== this.speaking.size || [...speaking].some((id) => !this.speaking.has(id));
     this.speaking = speaking;

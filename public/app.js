@@ -32,7 +32,7 @@ localStorage.setItem('lg-id', playerId);
 const socket = io({ transports: ['websocket', 'polling'] });
 const voice = new Voice({
   socket,
-  onSpeaking: (ids) => document.querySelectorAll('.player').forEach((n) => n.classList.toggle('speaking', ids.has(n.dataset.id))),
+  onSpeaking: () => renderSpeaking(),
   onStatus: (s) => {
     if (s === 'mic-denied') toast('Micro refusé : tu peux écouter et utiliser le chat écrit.');
     if (s === 'needs-gesture') $('#voice-status').textContent = 'Touche l\'écran pour activer le son';
@@ -146,12 +146,15 @@ function render() {
   $('#room-code').textContent = s.code;
   $('#phase-label').textContent = (s.round && s.phase !== 'ended' ? `${PHASES[s.phase]} · ${s.round}` : PHASES[s.phase]) || s.phase;
 
+  loadNotes();
   renderRoleCard();
   renderPrompt();
   renderPlayers();
   renderControls();
   renderLog();
+  renderNotes();
   renderVoiceBar();
+  renderSpeaking();
 
   const canChat = s.phase === 'lobby' || s.phase === 'ended' || me.alive === false || s.voice.talkTo.length > 0;
   $('#chat-input').disabled = !canChat;
@@ -257,9 +260,12 @@ function renderPlayers() {
       el('div', { className: 'pname', textContent: p.name + (p.id === s.me?.id ? ' (toi)' : '') }),
       el('div', { className: 'pmeta', textContent: [p.isHost ? '👑' : '', role ? role.name : '', !p.connected ? 'hors ligne' : ''].filter(Boolean).join(' · ') }),
       count ? el('div', { className: 'votes', textContent: count }) : null,
+      el('div', { className: 'talk-badge', textContent: '🔊', title: 'Parle' }),
     );
+    const note = notes.players[p.id];
+    if (note?.tag && NOTE_TAGS[note.tag]) node.append(el('div', { className: `note-tag tag-${note.tag}`, textContent: NOTE_TAGS[note.tag].icon, title: note.text || NOTE_TAGS[note.tag].label }));
+    else if (note?.text) node.append(el('div', { className: 'note-tag', textContent: '📝', title: note.text }));
     node.dataset.id = p.id;
-    if (voice.speaking.has(p.id)) node.classList.add('speaking');
     list.append(node);
   }
 }
@@ -338,10 +344,108 @@ document.querySelectorAll('.tab').forEach((tab) => {
   tab.onclick = () => {
     document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t === tab));
     tab.classList.remove('unread');
-    $('#tab-chat').classList.toggle('hidden', tab.dataset.tab !== 'chat');
-    $('#tab-log').classList.toggle('hidden', tab.dataset.tab !== 'log');
+    for (const name of ['chat', 'notes', 'log']) $(`#tab-${name}`).classList.toggle('hidden', tab.dataset.tab !== name);
   };
 });
+
+// ---------- Calepin (notes personnelles, stockées sur l'appareil) ----------
+
+const NOTE_TAGS = {
+  wolf: { icon: '🐺', label: 'Suspect' },
+  doubt: { icon: '❓', label: 'Doute' },
+  trust: { icon: '✅', label: 'Confiance' },
+};
+
+let notes = { players: {}, free: '' };
+let notesKey = null;
+let notesListKey = '';
+
+function loadNotes() {
+  const key = state.gameId ? `lg-notes-${state.code}-${state.gameId}` : null;
+  if (key === notesKey) return;
+  notesKey = key;
+  notesListKey = '';
+  try {
+    notes = (key && JSON.parse(localStorage.getItem(key))) || { players: {}, free: '' };
+  } catch {
+    notes = { players: {}, free: '' };
+  }
+  $('#notes-free').value = notes.free || '';
+  // On ne garde que les 5 dernières parties.
+  try {
+    const old = Object.keys(localStorage).filter((k) => k.startsWith('lg-notes-') && k !== key).sort();
+    old.slice(0, Math.max(0, old.length - 4)).forEach((k) => localStorage.removeItem(k));
+  } catch {}
+}
+
+function saveNotes() {
+  if (!notesKey) return;
+  try {
+    localStorage.setItem(notesKey, JSON.stringify(notes));
+  } catch {}
+}
+
+function renderNotes() {
+  loadNotes();
+  const inGame = !!state.gameId;
+  $('#notes-free').disabled = !inGame;
+  $('#notes-free').placeholder = inGame ? 'ex : Bob a défendu Chloé trop vite…' : 'Le calepin s\'ouvre au début de la partie.';
+  const others = state.players.filter((p) => p.id !== state.me?.id);
+  // On ne reconstruit la liste que si les joueurs changent, pour ne pas perdre la saisie en cours.
+  const listKey = notesKey + others.map((p) => `${p.id}:${p.alive}:${p.role}`).join(',');
+  if (listKey === notesListKey) return;
+  notesListKey = listKey;
+  const list = $('#note-players');
+  list.innerHTML = '';
+  if (!inGame) return;
+  for (const p of others) {
+    const entry = (notes.players[p.id] ||= { tag: null, text: '' });
+    const tags = el('div', { className: 'note-tags' });
+    for (const [key, t] of Object.entries(NOTE_TAGS)) {
+      const b = el('button', { className: `tag-btn${entry.tag === key ? ' active' : ''}`, textContent: t.icon, title: t.label, type: 'button' });
+      b.onclick = () => {
+        entry.tag = entry.tag === key ? null : key;
+        saveNotes();
+        notesListKey = '';
+        render();
+      };
+      tags.append(b);
+    }
+    const input = el('input', { className: 'note-input', value: entry.text || '', placeholder: 'Note…', maxLength: 120 });
+    input.oninput = () => {
+      entry.text = input.value;
+      saveNotes();
+    };
+    input.onchange = () => renderPlayers();
+    const role = ROLES[p.role];
+    list.append(
+      el('li', { className: `note-row${p.alive ? '' : ' is-dead'}` },
+        el('div', { className: 'note-name', textContent: `${p.alive ? '' : '💀 '}${p.name}${role ? ' · ' + role.icon : ''}` }),
+        tags,
+        input,
+      ),
+    );
+  }
+}
+
+$('#notes-free').oninput = (e) => {
+  notes.free = e.target.value;
+  saveNotes();
+};
+
+// ---------- Qui parle ----------
+
+function renderSpeaking() {
+  const ids = voice.speaking;
+  document.querySelectorAll('.player').forEach((n) => n.classList.toggle('speaking', ids.has(n.dataset.id)));
+  const box = $('#speakers');
+  if (!box || !state) return;
+  const names = state.players.filter((p) => ids.has(p.id)).map((p) => (p.id === state.me?.id ? 'Toi' : p.name));
+  const text = names.length === 1 && names[0] === 'Toi' ? 'Tu parles' : names.join(', ') + (names.length > 1 ? ' parlent' : ' parle');
+  box.innerHTML = '';
+  if (names.length) box.append(el('span', { className: 'speaker-dot' }), text);
+  $('#voice-status').classList.toggle('hidden', names.length > 0);
+}
 
 // ---------- Vocal ----------
 

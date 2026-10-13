@@ -48,7 +48,7 @@ body {
   box-shadow: 0 0 60px 10px rgba(255, 240, 180, 0.25);
   transition: all 1.2s;
 }
-body[data-screen="game"] .moon { width: 60px; height: 60px; top: 70vh; right: -10px; opacity: 0.25; }
+body[data-screen="game"] .moon { opacity: 0; }
 body.day .moon {
   background: radial-gradient(circle, #fff7c2, #ffc542 70%);
   box-shadow: 0 0 80px 30px rgba(255, 200, 60, 0.45);
@@ -159,7 +159,15 @@ h1 { text-align: center; margin: 8px 0 0; font-size: 34px; letter-spacing: 1px; 
   background: var(--card-strong); font-size: 26px; font-weight: 800;
   transition: box-shadow 0.15s;
 }
-.player.speaking .avatar { box-shadow: 0 0 0 3px var(--village), 0 0 18px var(--village); }
+.player.speaking { border-color: var(--village); }
+.player.speaking .avatar { box-shadow: 0 0 0 3px var(--village), 0 0 18px var(--village); animation: talk 0.9s ease-in-out infinite; }
+.talk-badge {
+  position: absolute; top: 6px; left: 8px; font-size: 14px; opacity: 0; transform: scale(0.6);
+  transition: opacity 0.15s, transform 0.15s;
+}
+.player.speaking .talk-badge { opacity: 1; transform: scale(1); }
+.note-tag { position: absolute; bottom: 6px; right: 8px; font-size: 15px; }
+@keyframes talk { 50% { box-shadow: 0 0 0 6px var(--village), 0 0 26px var(--village); } }
 .pname { font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pmeta { font-size: 12px; color: var(--muted); min-height: 1.2em; }
 .votes {
@@ -232,3 +240,28 @@ h1 { text-align: center; margin: 8px 0 0; font-size: 34px; letter-spacing: 1px; 
 
 @keyframes fade { from { opacity: 0; } }
 @keyframes pop { from { transform: scale(0.7) rotateY(90deg); opacity: 0; } }
+
+/* ---------- Qui parle ---------- */
+
+.speakers { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; color: var(--village); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+.speakers:empty { display: none; }
+.speaker-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; background: var(--village); animation: blink 0.9s infinite; vertical-align: middle; }
+@keyframes blink { 50% { opacity: 0.3; } }
+
+/* ---------- Calepin ---------- */
+
+.notes { padding: 12px; height: 380px; overflow-y: auto; }
+@media (min-width: 900px) { .notes { height: calc(100vh - 200px); } }
+.notes-help { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+.note-players { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.note-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 8px 10px; border-radius: 10px; background: var(--card); }
+.note-row.is-dead { opacity: 0.55; }
+.note-name { font-weight: 700; font-size: 14px; align-self: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-tags { display: flex; gap: 4px; }
+.tag-btn { width: 34px; height: 30px; border-radius: 8px; border: 1px solid var(--card-strong); background: transparent; font-size: 15px; cursor: pointer; filter: grayscale(1); opacity: 0.55; }
+.tag-btn.active { filter: none; opacity: 1; background: var(--card-strong); border-color: var(--accent); }
+.note-input { grid-column: 1 / -1; padding: 7px 10px; font-size: 14px; }
+textarea {
+  width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--card-strong);
+  background: var(--card); color: var(--text); font: inherit; font-size: 15px; resize: vertical;
+}

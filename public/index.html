@@ -62,6 +62,7 @@
       <aside class="side">
         <div class="tabs">
           <button class="tab active" data-tab="chat">💬 Chat</button>
+          <button class="tab" data-tab="notes">📝 Calepin</button>
           <button class="tab" data-tab="log">📜 Journal</button>
         </div>
         <div id="tab-chat" class="tab-panel">
@@ -70,6 +71,14 @@
             <input id="chat-input" maxlength="300" placeholder="Écrire un message…" autocomplete="off">
             <button class="btn small">Envoyer</button>
           </form>
+        </div>
+        <div id="tab-notes" class="tab-panel hidden">
+          <div class="notes">
+            <p class="notes-help">Visible par toi seul. Marque tes soupçons, ils s'affichent sur les cartes des joueurs.</p>
+            <ul id="note-players" class="note-players"></ul>
+            <label for="notes-free">Notes libres</label>
+            <textarea id="notes-free" rows="6" placeholder="ex : Bob a défendu Chloé trop vite…"></textarea>
+          </div>
         </div>
         <div id="tab-log" class="tab-panel hidden">
           <ul id="log" class="feed"></ul>
@@ -80,6 +89,7 @@
     <footer class="voicebar">
       <button id="mic" class="voice-btn" title="Micro">🎙️<span>Micro</span></button>
       <button id="deafen" class="voice-btn" title="Son">🔊<span>Son</span></button>
+      <div id="speakers" class="speakers"></div>
       <div id="voice-status" class="voice-status"></div>
     </footer>
   </main>

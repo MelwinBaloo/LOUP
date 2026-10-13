@@ -124,6 +124,7 @@ class Game {
       p.role = roles[i];
       p.alive = true;
     });
+    this.gameId = Date.now().toString(36);
     this.round = 0;
     this.winner = null;
     this.log = [];
@@ -454,6 +455,7 @@ class Game {
 
     const view = {
       code: this.code,
+      gameId: this.gameId || null,
       phase: this.phase,
       round: this.round,
       deadline: this.deadline,
