@@ -369,3 +369,12 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.7; }
   body[data-screen="game"] .sun { top: calc(env(safe-area-inset-top, 0px) + 6px); left: auto; right: 28vw; width: 58px; height: 58px; }
   body[data-screen="game"] .topbar { background: color-mix(in srgb, var(--surface) 55%, transparent); }
 }
+
+/* Jauge du micro : se remplit en vert quand on parle */
+#mic { position: relative; overflow: hidden; --level: 0; }
+#mic::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--level) * 100%);
+  background: color-mix(in srgb, var(--village) 45%, transparent); transition: height 0.1s linear; pointer-events: none;
+}
+#mic.off::after { display: none; }
+@media (max-width: 700px) { .speakers { white-space: normal; font-size: 13px; line-height: 1.25; } }

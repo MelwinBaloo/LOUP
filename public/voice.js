@@ -3,10 +3,11 @@
 // la politique `voice` envoyée par le serveur à chaque changement de phase.
 
 export class Voice {
-  constructor({ socket, onSpeaking, onStatus }) {
+  constructor({ socket, onSpeaking, onStatus, onLevel }) {
     this.socket = socket;
     this.onSpeaking = onSpeaking || (() => {});
     this.onStatus = onStatus || (() => {});
+    this.onLevel = onLevel || (() => {});
     this.peers = new Map(); // playerId -> { pc, epoch, sender, audio, analyser, pendingIce }
     this.myId = null;
     this.localStream = null;
@@ -191,7 +192,10 @@ export class Voice {
       for (const v of data) sum += (v - 128) * (v - 128);
       return Math.sqrt(sum / data.length);
     };
-    if (this.localAnalyser && this.localTrack?.enabled && this.policy.talkTo.length && level(this.localAnalyser) > 6) loud.add(this.myId);
+    // Notre propre indicateur s'allume même si personne ne peut nous entendre : ça confirme que le micro capte.
+    const mine = this.localAnalyser && this.localTrack?.enabled ? level(this.localAnalyser) : 0;
+    this.onLevel(Math.min(1, mine / 30));
+    if (mine > 5) loud.add(this.myId);
     const hear = new Set(this.policy.hearFrom);
     for (const [id, peer] of this.peers) {
       if (peer.analyser && hear.has(id) && level(peer.analyser) > 6) loud.add(id);

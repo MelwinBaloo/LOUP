@@ -33,6 +33,7 @@ const socket = io({ transports: ['websocket', 'polling'] });
 const voice = new Voice({
   socket,
   onSpeaking: () => renderSpeaking(),
+  onLevel: (v) => $('#mic').style.setProperty('--level', v.toFixed(2)),
   onStatus: (s) => {
     if (s === 'mic-denied') toast('Micro refusé : tu peux écouter et utiliser le chat écrit.');
     if (s === 'needs-gesture') $('#voice-status').textContent = 'Touche l\'écran pour activer le son';
@@ -473,7 +474,8 @@ function renderSpeaking() {
   const box = $('#speakers');
   if (!box || !state) return;
   const names = state.players.filter((p) => ids.has(p.id)).map((p) => (p.id === state.me?.id ? 'Toi' : p.name));
-  const text = names.length === 1 && names[0] === 'Toi' ? 'Tu parles' : names.join(', ') + (names.length > 1 ? ' parlent' : ' parle');
+  let text = names.length === 1 && names[0] === 'Toi' ? 'Tu parles' : names.join(', ') + (names.length > 1 ? ' parlent' : ' parle');
+  if (names.length === 1 && names[0] === 'Toi' && state.voice.talkTo.length === 0) text += ' (personne ne t\'entend)';
   box.innerHTML = '';
   if (names.length) box.append(el('span', { className: 'speaker-dot' }), text);
   $('#voice-status').classList.toggle('hidden', names.length > 0);
