@@ -102,6 +102,7 @@
       <aside class="side">
         <div class="tabs">
           <button class="tab active" data-tab="chat">💬 Chat</button>
+          <button class="tab tab-pack hidden" data-tab="pack">🐺 Meute</button>
           <button class="tab" data-tab="notes">📝 Calepin</button>
           <button class="tab" data-tab="log">📜 Journal</button>
         </div>
@@ -110,6 +111,14 @@
           <form id="chat-form" class="chat-form">
             <input id="chat-input" maxlength="300" placeholder="Écrire un message…" autocomplete="off">
             <button class="btn small">Envoyer</button>
+          </form>
+        </div>
+        <div id="tab-pack" class="tab-panel hidden">
+          <div id="pack-members" class="pack-members"></div>
+          <ul id="pack" class="feed pack-feed"></ul>
+          <form id="pack-form" class="chat-form">
+            <input id="pack-input" maxlength="300" placeholder="Message secret à la meute…" autocomplete="off">
+            <button class="btn small">Hurler</button>
           </form>
         </div>
         <div id="tab-notes" class="tab-panel hidden">

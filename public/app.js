@@ -183,6 +183,7 @@ function onPhaseChange(prev, s) {
   navigator.vibrate?.(120);
   if (s.phase === 'night' && s.round === 1 && s.me?.role) showRoleReveal(s.me.role);
   if (s.phase === 'ended') showEnd(s);
+  if (s.phase === 'night' && s.me?.role === 'werewolf' && s.me.alive) openTab('pack');
   if (prev && prev.phase === 'lobby' && s.phase !== 'lobby') $('#chat').innerHTML = '';
 }
 
@@ -203,12 +204,19 @@ function render() {
   renderControls();
   renderLog();
   renderNotes();
+  renderPack();
   renderVoiceBar();
   renderSpeaking();
 
   const canChat = s.phase === 'lobby' || s.phase === 'ended' || me.alive === false || s.voice.talkTo.length > 0;
   $('#chat-input').disabled = !canChat;
-  $('#chat-input').placeholder = canChat ? (me.alive === false && s.phase !== 'lobby' && s.phase !== 'ended' ? 'Message aux morts…' : isNight ? 'Message aux loups…' : 'Écrire un message…') : 'Chut… le village dort.';
+  const wolfAtNight = isNight && me.alive && me.role === 'werewolf';
+  $('#chat-input').disabled = !canChat || wolfAtNight;
+  $('#chat-input').placeholder = wolfAtNight
+    ? 'La nuit, parle à ta meute dans l\'onglet 🐺'
+    : canChat
+      ? me.alive === false && s.phase !== 'lobby' && s.phase !== 'ended' ? 'Message aux morts…' : 'Écrire un message…'
+      : 'Chut… le village dort.';
 }
 
 function renderRoleCard() {
@@ -394,9 +402,61 @@ document.querySelectorAll('.tab').forEach((tab) => {
   tab.onclick = () => {
     document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t === tab));
     tab.classList.remove('unread');
-    for (const name of ['chat', 'notes', 'log']) $(`#tab-${name}`).classList.toggle('hidden', tab.dataset.tab !== name);
+    for (const name of ['chat', 'pack', 'notes', 'log']) $(`#tab-${name}`).classList.toggle('hidden', tab.dataset.tab !== name);
   };
 });
+
+function openTab(name) {
+  document.querySelector(`.tab[data-tab="${name}"]`)?.click();
+}
+
+// ---------- Meute (chat secret des loups) ----------
+
+let packCount = 0;
+
+function renderPack() {
+  const s = state;
+  const tab = document.querySelector('.tab[data-tab="pack"]');
+  const visible = Array.isArray(s.wolfChat);
+  tab.classList.toggle('hidden', !visible);
+  if (!visible) {
+    if (tab.classList.contains('active')) openTab('chat');
+    packCount = 0;
+    return;
+  }
+  const me = s.me || {};
+  const canWrite = me.role === 'werewolf' && me.alive;
+  const wolves = s.players.filter((p) => p.role === 'werewolf');
+  $('#pack-members').textContent = canWrite
+    ? `🐺 Ta meute : ${wolves.map((w) => (w.id === me.id ? 'toi' : w.name) + (w.alive ? '' : ' 💀')).join(', ')}. Personne d'autre ne lit ces messages.`
+    : '👻 Tu observes la meute en secret.';
+  $('#pack-input').disabled = !canWrite;
+  $('#pack-input').placeholder = canWrite ? 'Message secret à la meute…' : 'Seuls les loups vivants peuvent hurler ici.';
+  if (s.wolfChat.length === packCount) return;
+  const list = $('#pack');
+  const fresh = s.wolfChat.length > packCount;
+  list.innerHTML = '';
+  if (!s.wolfChat.length) list.append(el('li', { className: 'pack-empty', textContent: 'Le canal est silencieux… Mettez-vous d\'accord sur votre prochaine victime.' }));
+  for (const m of s.wolfChat) {
+    list.append(el('li', { className: `chat-wolves${m.from === me.id ? ' mine' : ''}` }, el('b', { textContent: `🐺 ${m.from === me.id ? 'Toi' : m.name} : ` }), m.text));
+  }
+  list.scrollTop = list.scrollHeight;
+  const last = s.wolfChat.at(-1);
+  if (fresh && packCount && last && last.from !== me.id && !tab.classList.contains('active')) {
+    tab.classList.add('unread');
+    navigator.vibrate?.([60, 40, 60]);
+  }
+  packCount = s.wolfChat.length;
+}
+
+$('#pack-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const input = $('#pack-input');
+  if (!input.value.trim()) return;
+  const res = await emit('chat', { text: input.value, channel: 'wolves' });
+  if (!res.ok) return toast(res.error);
+  input.value = '';
+};
 
 // ---------- Calepin (notes personnelles, stockées sur l'appareil) ----------
 

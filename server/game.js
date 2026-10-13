@@ -48,6 +48,7 @@ class Game {
     this.winner = null;
     this.log = []; // événements publics
     this.privateLog = new Map(); // id -> [messages]
+    this.wolfChat = []; // canal secret de la meute
     this.resetNight();
     this.witch = { healUsed: false, poisonUsed: false };
     this.votes = new Map();
@@ -129,6 +130,7 @@ class Game {
     this.winner = null;
     this.log = [];
     this.privateLog = new Map();
+    this.wolfChat = [];
     this.witch = { healUsed: false, poisonUsed: false };
     this.addLog('start', 'La partie commence. Chacun découvre son rôle...');
     this.startNight();
@@ -398,18 +400,24 @@ class Game {
     return true;
   }
 
-  chat(playerId, text) {
+  chat(playerId, text, channel) {
     const s = this.players.get(playerId);
     text = String(text || '').trim().slice(0, 300);
     if (!s || !text) return null;
-    const recipients = [...this.players.values()].filter((l) => this.canHear(l, s)).map((l) => l.id);
-    let channel = 'village';
-    if (this.phase !== 'lobby' && this.phase !== 'ended') {
-      if (!s.alive) channel = 'dead';
-      else if (NIGHT_PHASES.has(this.phase)) channel = 'wolves';
+    const inGame = this.phase !== 'lobby' && this.phase !== 'ended';
+    // Canal secret de la meute : explicite, ou implicite pour un loup qui écrit la nuit.
+    if (channel === 'wolves' || (inGame && s.alive && s.role === 'werewolf' && NIGHT_PHASES.has(this.phase))) {
+      if (!inGame || s.role !== 'werewolf') throw new GameError('Ce canal est réservé aux loups-garous.');
+      if (!s.alive) throw new GameError('Les loups morts ne hurlent plus avec la meute.');
+      this.wolfChat.push({ from: s.id, name: s.name, text, at: Date.now() });
+      if (this.wolfChat.length > 150) this.wolfChat.shift();
+      this.changed();
+      return null;
     }
-    if (recipients.length === 0 && channel !== 'dead') throw new GameError('Personne ne peut t\'entendre maintenant.');
-    return { recipients: [...recipients, s.id], message: { from: s.id, name: s.name, text, channel, at: Date.now() } };
+    const recipients = [...this.players.values()].filter((l) => this.canHear(l, s)).map((l) => l.id);
+    const room = inGame && !s.alive ? 'dead' : 'village';
+    if (recipients.length === 0 && room !== 'dead') throw new GameError('Personne ne peut t\'entendre maintenant.');
+    return { recipients: [...recipients, s.id], message: { from: s.id, name: s.name, text, channel: room, at: Date.now() } };
   }
 
   // ---------- Vues ----------
@@ -469,6 +477,7 @@ class Game {
       me: me ? { id: me.id, role: inGame ? me.role : null, alive: me.alive } : null,
       minPlayers: MIN_PLAYERS,
       composition: this.players.size >= MIN_PLAYERS ? composeRoles(this.players.size) : null,
+      wolfChat: me && inGame && (me.role === 'werewolf' || (!me.alive && this.hunter?.id !== me.id)) ? this.wolfChat : undefined,
       voice: { talkTo: [], hearFrom: [] },
       actions: {},
     };

@@ -151,7 +151,9 @@ test('règles de communication jour / nuit / morts', () => {
   assert.ok(!game.canHear(P(w1), P(v1)));
   assert.deepEqual(game.view(v1).voice.talkTo, []);
   assert.throws(() => game.chat(v1, 'coucou'), GameError);
-  assert.equal(game.chat(w1, 'on mange qui ?').message.channel, 'wolves');
+  // La nuit, un loup qui écrit parle à sa meute (canal secret).
+  assert.equal(game.chat(w1, 'on mange qui ?'), null);
+  assert.equal(game.wolfChat.at(-1).text, 'on mange qui ?');
 
   // Un mort parle aux morts uniquement, mais entend les vivants.
   P(v2).alive = false;
@@ -174,4 +176,27 @@ test('reconnexion pendant la partie', () => {
   const p = game.addPlayer('player-1', 'P1');
   assert.ok(p.connected);
   assert.equal(p.epoch, 2);
+});
+
+test('chat secret de la meute', () => {
+  const { game, byRole } = setup(['werewolf', 'werewolf', 'seer', 'villager', 'villager']);
+  const [w1, w2] = byRole('werewolf');
+  const [seer] = byRole('seer');
+  const [v1] = byRole('villager');
+
+  // Utilisable aussi en plein jour.
+  game.phase = 'day';
+  assert.equal(game.chat(w1, 'on accuse la voyante ?', 'wolves'), null);
+  assert.deepEqual(game.view(w2).wolfChat.map((m) => m.text), ['on accuse la voyante ?']);
+  // Les villageois ne voient ni ne peuvent écrire dans ce canal.
+  assert.equal(game.view(v1).wolfChat, undefined);
+  assert.equal(game.view(seer).wolfChat, undefined);
+  assert.throws(() => game.chat(v1, 'je suis un loup', 'wolves'), /réservé/);
+  // Le chat du village reste public le jour.
+  assert.equal(game.chat(w1, 'bonjour').message.channel, 'village');
+  // Les morts lisent la meute en spectateurs mais n'y écrivent pas.
+  game.players.get(v1).alive = false;
+  assert.equal(game.view(v1).wolfChat.length, 1);
+  game.players.get(w2).alive = false;
+  assert.throws(() => game.chat(w2, 'aouuu', 'wolves'), /morts/);
 });

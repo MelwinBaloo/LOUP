@@ -135,9 +135,9 @@ function createServer() {
       room.game.act(playerId, action);
     }));
 
-    socket.on('chat', guard(({ text }) => {
+    socket.on('chat', guard(({ text, channel }) => {
       if (!room) throw new GameError('Pas de partie.');
-      const out = room.game.chat(playerId, text);
+      const out = room.game.chat(playerId, text, channel);
       if (!out) return;
       for (const id of out.recipients) room.sockets.get(id)?.emit('chat', out.message);
     }));
