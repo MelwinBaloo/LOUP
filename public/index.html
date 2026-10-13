@@ -13,8 +13,50 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="night">
-  <div class="sky" aria-hidden="true"><div class="moon"></div></div>
+<body class="dusk">
+  <div class="sky" aria-hidden="true">
+    <div class="sky-layer sky-dusk"></div>
+    <div class="sky-layer sky-night"></div>
+    <div class="sky-layer sky-day"></div>
+    <div class="glow"></div>
+    <div class="stars" id="stars"></div>
+    <div class="shooting"></div>
+    <div class="sun"></div>
+    <div class="moon"></div>
+    <div class="fog"></div>
+    <svg class="village" viewBox="0 0 1200 140" preserveAspectRatio="xMidYMax slice">
+      <g class="hill">
+        <path d="M0 110 Q150 70 320 100 T640 92 T960 104 T1200 88 V140 H0 Z"/>
+        <!-- Sapins -->
+        <path d="M40 112 l18 -46 l18 46 z M70 108 l14 -34 l14 34 z M1110 100 l20 -52 l20 52 z M1145 104 l14 -36 l14 36 z M560 98 l12 -30 l12 30 z"/>
+        <!-- Maisons -->
+        <path d="M140 108 v-34 l26 -20 l26 20 v34 z"/>
+        <path d="M230 106 v-28 l22 -17 l22 17 v28 z"/>
+        <path d="M400 104 v-40 l30 -24 l30 24 v40 z"/>
+        <!-- Église -->
+        <path d="M640 100 v-44 l34 -26 l34 26 v44 z M664 40 v-22 h20 v22 z M672 18 v-14 h4 v14 z M667 9 h14 v3 h-14 z"/>
+        <path d="M760 104 v-30 l24 -18 l24 18 v30 z"/>
+        <path d="M880 106 v-36 l28 -21 l28 21 v36 z"/>
+        <path d="M990 104 v-26 l20 -15 l20 15 v26 z"/>
+      </g>
+      <g>
+        <rect class="win lit" x="150" y="82" width="9" height="10"/>
+        <rect class="win" x="173" y="82" width="9" height="10"/>
+        <rect class="win lit" x="246" y="84" width="10" height="9"/>
+        <rect class="win lit" x="412" y="72" width="10" height="11"/>
+        <rect class="win" x="438" y="72" width="10" height="11"/>
+        <rect class="win lit" x="424" y="90" width="10" height="11"/>
+        <rect class="win lit" x="668" y="68" width="12" height="18" rx="6"/>
+        <rect class="win lit" x="777" y="82" width="10" height="10"/>
+        <rect class="win" x="893" y="80" width="10" height="11"/>
+        <rect class="win lit" x="913" y="80" width="10" height="11"/>
+        <rect class="win lit" x="1004" y="86" width="9" height="9"/>
+      </g>
+    </svg>
+  </div>
+  <div id="phase-transition" class="phase-transition" aria-hidden="true">
+    <div><div class="pt-icon"></div><div class="pt-text"></div><div class="pt-sub"></div></div>
+  </div>
 
   <!-- Accueil -->
   <main id="home" class="screen">

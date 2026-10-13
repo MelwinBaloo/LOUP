@@ -40,6 +40,18 @@ const voice = new Voice({
   },
 });
 
+(function makeStars() {
+  const box = $('#stars');
+  for (let i = 0; i < 70; i++) {
+    const star = el('div', { className: i % 9 === 0 ? 'star big' : 'star' });
+    star.style.left = `${Math.random() * 100}%`;
+    star.style.top = `${Math.random() * 100}%`;
+    star.style.animationDelay = `${Math.random() * 3}s`;
+    star.style.animationDuration = `${2 + Math.random() * 3}s`;
+    box.append(star);
+  }
+})();
+
 window.loupDebug = { voice }; // utile pour les tests et le débogage
 
 let state = null;
@@ -125,10 +137,30 @@ function showScreen(name) {
   $('#game').classList.toggle('hidden', name !== 'game');
 }
 
+// Ambiance visuelle : crépuscule au salon, nuit bleutée, jour orangé.
+function ambiance(phase) {
+  if (phase === 'night' || phase === 'witch') return 'night';
+  if (phase === 'lobby' || phase === 'ended') return 'dusk';
+  return 'day';
+}
+
+function playTransition(to, round) {
+  const box = $('#phase-transition');
+  box.className = `phase-transition to-${to}`;
+  box.querySelector('.pt-icon').textContent = to === 'night' ? '🌕' : '☀️';
+  box.querySelector('.pt-text').textContent = to === 'night' ? 'La nuit tombe…' : 'Le jour se lève';
+  box.querySelector('.pt-sub').textContent = to === 'night' ? `Nuit ${round} · le village s'endort` : 'Le village se réveille';
+  void box.offsetWidth; // relance l'animation
+  box.classList.add('show');
+}
+
 function onPhaseChange(prev, s) {
   const key = `${s.phase}-${s.round}`;
   if (key === lastPhaseKey) return;
   lastPhaseKey = key;
+  const from = prev ? ambiance(prev.phase) : null;
+  const to = ambiance(s.phase);
+  if (from && from !== to && to !== 'dusk' && !(s.phase === 'night' && s.round === 1)) playTransition(to, s.round);
   if (s.phase !== 'witch') witchChoice = { heal: false, poison: null };
   navigator.vibrate?.(120);
   if (s.phase === 'night' && s.round === 1 && s.me?.role) showRoleReveal(s.me.role);
@@ -140,7 +172,7 @@ function render() {
   const s = state;
   const me = s.me || {};
   const isNight = s.phase === 'night' || s.phase === 'witch';
-  document.body.className = isNight ? 'night' : s.phase === 'lobby' || s.phase === 'ended' ? 'night' : 'day';
+  document.body.className = ambiance(s.phase);
   document.body.classList.toggle('dead', me.alive === false && s.phase !== 'lobby');
 
   $('#room-code').textContent = s.code;
@@ -519,6 +551,7 @@ $('#leave').onclick = async () => {
   state = null;
   lastPhaseKey = '';
   voice.closeAll();
+  document.body.className = 'dusk';
   history.replaceState(null, '', location.pathname);
   showScreen('home');
 };

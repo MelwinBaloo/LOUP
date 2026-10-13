@@ -1,27 +1,41 @@
+/* Trois ambiances : crépuscule (salon), nuit bleutée, jour orangé.
+   La classe du <body> (dusk / night / day) pilote les couleurs et le décor. */
 :root {
-  --bg: #0f1226;
-  --bg2: #1a1f3d;
-  --card: rgba(255, 255, 255, 0.06);
-  --card-strong: rgba(255, 255, 255, 0.12);
-  --text: #eef0ff;
-  --muted: #a3a8cc;
-  --accent: #ffcc66;
   --wolf: #e8505b;
   --village: #4fc3a1;
   --dead: #8a8fa8;
   --radius: 14px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --sky-speed: 2.5s;
+  /* Crépuscule par défaut */
+  --card: rgba(255, 230, 255, 0.08);
+  --card-strong: rgba(255, 230, 255, 0.15);
+  --text: #f6eeff;
+  --muted: #c5b3d9;
+  --accent: #ffc46b;
+  --hill: #1d1233;
+  --surface: rgba(28, 16, 52, 0.72);
   color-scheme: dark;
 }
 
+body.night {
+  --card: rgba(140, 180, 255, 0.09);
+  --card-strong: rgba(140, 180, 255, 0.18);
+  --text: #e6efff;
+  --muted: #9fb6dd;
+  --accent: #ffd479;
+  --hill: #050d22;
+  --surface: rgba(6, 18, 46, 0.75);
+}
+
 body.day {
-  --bg: #f6e7c8;
-  --bg2: #ffd99a;
-  --card: rgba(80, 50, 10, 0.07);
-  --card-strong: rgba(80, 50, 10, 0.14);
-  --text: #2c1d0e;
-  --muted: #7a5f3c;
-  --accent: #c0561b;
+  --card: rgba(255, 248, 235, 0.45);
+  --card-strong: rgba(255, 248, 235, 0.7);
+  --text: #3a1d06;
+  --muted: #8a5222;
+  --accent: #d4541a;
+  --hill: #7a3b12;
+  --surface: rgba(255, 236, 205, 0.8);
   color-scheme: light;
 }
 
@@ -32,26 +46,99 @@ html, body { height: 100%; }
 body {
   margin: 0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
-  background-attachment: fixed;
+  background: #120b26;
   color: var(--text);
-  transition: background 1s, color 1s;
+  transition: color var(--sky-speed);
   -webkit-tap-highlight-color: transparent;
 }
 
 .hidden { display: none !important; }
 
+/* ---------- Décor : ciel, astres, village ---------- */
+
 .sky { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: -1; }
-.moon {
-  position: absolute; top: 6vh; right: 8vw; width: 90px; height: 90px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fffbe6, #f2e3a6 60%, #c9b56e);
-  box-shadow: 0 0 60px 10px rgba(255, 240, 180, 0.25);
-  transition: all 1.2s;
+.sky-layer { position: absolute; inset: 0; opacity: 0; transition: opacity var(--sky-speed) ease; }
+.sky-dusk { background: linear-gradient(180deg, #1b1240 0%, #4a2a6e 45%, #a8507a 80%, #f08a5d 100%); }
+.sky-night { background: linear-gradient(180deg, #030a1f 0%, #0a1f4a 50%, #17407a 100%); }
+.sky-day { background: linear-gradient(180deg, #ffb35c 0%, #ffcf8a 40%, #ffe3b0 75%, #ff9f55 100%); }
+body.dusk .sky-dusk, body.night .sky-night, body.day .sky-day { opacity: 1; }
+
+/* Halo de lumière chaude le jour, lueur bleue la nuit */
+.glow { position: absolute; inset: 0; opacity: 0; transition: opacity var(--sky-speed); }
+body.day .glow { opacity: 1; background: radial-gradient(ellipse at 15% 10%, rgba(255, 210, 120, 0.85), transparent 55%); }
+body.night .glow { opacity: 1; background: radial-gradient(ellipse at 85% 8%, rgba(150, 190, 255, 0.28), transparent 50%); }
+
+.stars { position: absolute; inset: 0 0 30% 0; opacity: 0; transition: opacity var(--sky-speed); }
+body.night .stars { opacity: 1; }
+body.dusk .stars { opacity: 0.35; }
+.star { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; animation: twinkle 3s ease-in-out infinite; }
+.star.big { width: 3px; height: 3px; box-shadow: 0 0 6px #cfe0ff; }
+@keyframes twinkle { 50% { opacity: 0.2; } }
+
+.shooting { position: absolute; top: 12%; left: 70%; width: 120px; height: 2px; opacity: 0;
+  background: linear-gradient(90deg, #fff, transparent); transform: rotate(-25deg); }
+body.night .shooting { animation: shoot 9s ease-in 3s infinite; }
+@keyframes shoot {
+  0% { opacity: 0; transform: translate(0, 0) rotate(-25deg); }
+  2% { opacity: 1; }
+  8% { opacity: 0; transform: translate(-320px, 150px) rotate(-25deg); }
+  100% { opacity: 0; }
 }
-body[data-screen="game"] .moon { opacity: 0; }
-body.day .moon {
-  background: radial-gradient(circle, #fff7c2, #ffc542 70%);
-  box-shadow: 0 0 80px 30px rgba(255, 200, 60, 0.45);
+
+/* La lune et le soleil suivent un arc : ils montent au-dessus de l'horizon ou se couchent derrière. */
+.moon, .sun { position: absolute; border-radius: 50%; transition: transform var(--sky-speed) cubic-bezier(.45,.05,.3,1), opacity var(--sky-speed); }
+.moon {
+  top: 7vh; right: 9vw; width: 96px; height: 96px;
+  background: radial-gradient(circle at 35% 35%, #fffdf0, #f1e6b8 55%, #c9bb85);
+  box-shadow: 0 0 50px 12px rgba(220, 230, 255, 0.35), 0 0 140px 50px rgba(120, 160, 255, 0.18);
+  transform: translate(-25vw, 85vh) scale(0.8); opacity: 0;
+}
+.moon::before, .moon::after { content: ''; position: absolute; border-radius: 50%; background: rgba(150, 140, 100, 0.25); }
+.moon::before { width: 22px; height: 22px; top: 22px; left: 50px; }
+.moon::after { width: 14px; height: 14px; top: 56px; left: 28px; }
+body.night .moon { transform: none; opacity: 1; }
+body.dusk .moon { transform: scale(0.75); opacity: 0.85; }
+
+.sun {
+  top: 6vh; left: 10vw; width: 120px; height: 120px;
+  background: radial-gradient(circle, #fffbe0 0%, #ffe07a 45%, #ffa630 100%);
+  box-shadow: 0 0 80px 30px rgba(255, 180, 60, 0.6), 0 0 200px 90px rgba(255, 140, 40, 0.3);
+  transform: translate(20vw, 85vh) scale(0.7); opacity: 0;
+}
+body.day .sun { transform: none; opacity: 1; animation: sunpulse 6s ease-in-out infinite; }
+@keyframes sunpulse { 50% { box-shadow: 0 0 100px 40px rgba(255, 180, 60, 0.7), 0 0 240px 110px rgba(255, 140, 40, 0.35); } }
+
+.fog { position: absolute; left: -20%; right: -20%; bottom: 60px; height: 160px; opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(170, 200, 255, 0.18), transparent 70%);
+  transition: opacity var(--sky-speed); animation: drift 30s linear infinite alternate; }
+body.night .fog { opacity: 1; }
+@keyframes drift { to { transform: translateX(15%); } }
+
+.village { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 140px; }
+.village .hill { fill: var(--hill); transition: fill var(--sky-speed); }
+.village .win { fill: #2a1a0a; transition: fill var(--sky-speed); }
+body.night .village .win.lit, body.dusk .village .win { fill: #ffcc5c; filter: drop-shadow(0 0 4px #ffb02e); }
+body.night .village .win.lit { animation: flicker 4s infinite; }
+body.night .village .win.lit:nth-child(3n) { animation-delay: 1.3s; }
+@keyframes flicker { 92% { opacity: 1; } 94% { opacity: 0.6; } 96% { opacity: 1; } }
+
+/* Grand fondu lors du passage jour ↔ nuit */
+.phase-transition {
+  position: fixed; inset: 0; z-index: 15; display: grid; place-items: center; pointer-events: none;
+  opacity: 0; text-align: center;
+}
+.phase-transition.show { animation: phaseShow 2.6s ease forwards; }
+.phase-transition.to-night { background: radial-gradient(circle, rgba(10, 25, 70, 0.92), rgba(2, 6, 20, 0.97)); color: #dfe9ff; }
+.phase-transition.to-day { background: radial-gradient(circle, rgba(255, 210, 130, 0.92), rgba(255, 140, 60, 0.95)); color: #4a2205; }
+.pt-icon { font-size: 84px; animation: rise 2.6s ease forwards; }
+.pt-text { font-size: 28px; font-weight: 800; letter-spacing: 1px; margin-top: 8px; }
+.pt-sub { font-size: 16px; opacity: 0.8; margin-top: 6px; }
+@keyframes phaseShow { 0% { opacity: 0; } 20%, 70% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes rise { from { transform: translateY(60px); } to { transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --sky-speed: 0.01s; }
+  .star, .shooting, .fog, .sun, .pt-icon, .village .win { animation: none !important; }
 }
 
 /* ---------- Boutons & champs ---------- */
@@ -101,7 +188,7 @@ h1 { text-align: center; margin: 8px 0 0; font-size: 34px; letter-spacing: 1px; 
 .topbar {
   position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px;
   padding: max(10px, env(safe-area-inset-top)) 16px 10px;
-  background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(10px);
+  background: var(--surface); backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--card-strong);
 }
 .icon-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; padding: 4px 8px; }
@@ -204,7 +291,7 @@ h1 { text-align: center; margin: 8px 0 0; font-size: 34px; letter-spacing: 1px; 
 .voicebar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: flex; align-items: center; gap: 10px;
   padding: 10px 16px calc(10px + var(--safe-bottom));
-  background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(10px);
+  background: var(--surface); backdrop-filter: blur(10px);
   border-top: 1px solid var(--card-strong);
 }
 .voice-btn {
@@ -264,4 +351,21 @@ h1 { text-align: center; margin: 8px 0 0; font-size: 34px; letter-spacing: 1px; 
 textarea {
   width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--card-strong);
   background: var(--card); color: var(--text); font: inherit; font-size: 15px; resize: vertical;
+}
+
+/* Les blocs restent lisibles au-dessus du décor */
+.role-card, .prompt, .player, .side, .home-card { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.topbar, .voicebar { transition: background var(--sky-speed); }
+body.day .player, body.day .side, body.day .prompt, body.day .role-card { box-shadow: 0 4px 18px rgba(160, 70, 10, 0.12); }
+body.night .player, body.night .side, body.night .prompt, body.night .role-card { box-shadow: 0 4px 22px rgba(0, 10, 40, 0.35); }
+.player, .prompt, .role-card, .side { transition: background var(--sky-speed), box-shadow var(--sky-speed), transform 0.15s, border-color 0.2s, opacity 0.3s; }
+body[data-screen="game"] .village { bottom: calc(66px + var(--safe-bottom)); }
+body[data-screen="game"] .sky::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: calc(66px + var(--safe-bottom)); background: var(--hill); transition: background var(--sky-speed); }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.7; }
+@media (max-width: 700px) {
+  body[data-screen="game"] .moon { top: calc(env(safe-area-inset-top, 0px) + 10px); right: 30vw; width: 50px; height: 50px; }
+  body[data-screen="game"] .moon::before { width: 11px; height: 11px; top: 11px; left: 26px; }
+  body[data-screen="game"] .moon::after { width: 7px; height: 7px; top: 29px; left: 14px; }
+  body[data-screen="game"] .sun { top: calc(env(safe-area-inset-top, 0px) + 6px); left: auto; right: 28vw; width: 58px; height: 58px; }
+  body[data-screen="game"] .topbar { background: color-mix(in srgb, var(--surface) 55%, transparent); }
 }

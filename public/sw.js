@@ -1,6 +1,6 @@
 // Service worker minimal : met en cache l'interface pour un démarrage rapide.
 // Le jeu lui-même nécessite une connexion (Socket.IO).
-const CACHE = 'loup-garou-v2';
+const CACHE = 'loup-garou-v3';
 const ASSETS = ['./', 'index.html', 'style.css', 'app.js', 'voice.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png'];
 
 self.addEventListener('install', (e) => {
