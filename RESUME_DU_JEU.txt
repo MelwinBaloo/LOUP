@@ -1,0 +1,210 @@
+===============================================================================
+                    LOUP-GAROU EN LIGNE - RESUME DU JEU
+===============================================================================
+
+Le jeu du Loup-Garou entre amis, en ligne, avec chat vocal integre.
+Jouable dans le navigateur, sur smartphone (Android / iPhone) et sur Windows.
+
+
+-------------------------------------------------------------------------------
+1. LE PRINCIPE
+-------------------------------------------------------------------------------
+
+Le village de Thiercelieux est infeste de loups-garous caches parmi les
+joueurs. Chaque joueur recoit un role secret.
+
+  - Les VILLAGEOIS doivent demasquer et eliminer tous les loups.
+  - Les LOUPS-GAROUS doivent devorer les villageois sans se faire reperer.
+
+La partie alterne entre la NUIT (les loups attaquent, les roles speciaux
+agissent en secret) et le JOUR (tout le village debat puis vote pour
+eliminer un suspect).
+
+Conditions de victoire :
+  - Le village gagne quand il ne reste plus aucun loup.
+  - Les loups gagnent quand ils sont aussi nombreux que les autres joueurs.
+
+
+-------------------------------------------------------------------------------
+2. LES ROLES
+-------------------------------------------------------------------------------
+
+  LOUP-GAROU
+    Chaque nuit, les loups se mettent d'accord pour devorer un joueur
+    (tous les loups doivent voter pour la meme victime). Le jour, ils se
+    font passer pour des innocents.
+
+  SIMPLE VILLAGEOIS
+    Aucun pouvoir, mais sa voix compte : il debat et vote.
+
+  VOYANTE
+    Chaque nuit, elle decouvre le vrai role d'un joueur de son choix.
+
+  SORCIERE
+    Elle possede une potion de vie (sauver la victime des loups) et une
+    potion de mort (tuer un joueur). Chaque potion ne sert qu'une fois.
+
+  CHASSEUR
+    S'il meurt, il emporte immediatement un joueur de son choix avec lui.
+
+Repartition automatique selon le nombre de joueurs (4 a 18) :
+
+    Joueurs   Loups   Voyante   Sorciere   Chasseur   Villageois
+    -------   -----   -------   --------   --------   ----------
+      4-5       1        oui       non        non       le reste
+       6        2        oui       oui        non       le reste
+      7-8       2        oui       oui        oui       le reste
+      9-12      3        oui       oui        oui       le reste
+     13-18      4        oui       oui        oui       le reste
+
+
+-------------------------------------------------------------------------------
+3. DEROULEMENT D'UNE PARTIE
+-------------------------------------------------------------------------------
+
+  1. SALON
+     Un joueur cree une partie et recoit un code a 5 lettres (ex : ACJWS).
+     Il partage le code ou le lien "Inviter des amis". Les autres
+     rejoignent avec ce code. L'hote (couronne) lance la partie.
+
+  2. REVELATION DES ROLES
+     Chacun decouvre son role en secret sur son ecran.
+
+  3. NUIT (75 s)
+     Les loups choisissent leur victime. La voyante sonde un joueur.
+
+  4. SORCIERE (30 s)
+     Elle voit qui a ete attaque et decide d'utiliser ou non ses potions.
+
+  5. LEVER DU JOUR
+     Le conteur annonce les morts de la nuit et revele leur role.
+
+  6. DEBAT (2 min 30)
+     Tout le monde discute pour trouver les loups.
+     L'hote peut passer directement au vote.
+
+  7. VOTE (60 s)
+     Chacun vote pour eliminer un suspect (ou s'abstient).
+     La majorite l'emporte ; en cas d'egalite, personne n'est elimine.
+
+  8. Retour a la nuit... jusqu'a la victoire d'un camp.
+     En fin de partie, tous les roles sont reveles et l'hote peut relancer.
+
+Les morts deviennent spectateurs : ils voient tous les roles et entendent
+tout, mais ne peuvent parler qu'aux autres morts.
+
+
+-------------------------------------------------------------------------------
+4. FONCTIONNALITES
+-------------------------------------------------------------------------------
+
+  CHAT VOCAL (qui suit les regles du jeu)
+    - Salon / fin de partie : tout le monde se parle.
+    - Nuit : seuls les loups s'entendent entre eux.
+    - Jour / vote : tous les vivants se parlent.
+    - Morts : entendent tout, ne parlent qu'aux autres morts.
+    - Boutons Micro (muet) et Son (couper le son), jauge de niveau du micro.
+    - Indicateur "qui parle" : halo vert sur la carte du joueur et bandeau
+      "Chloe, David parlent" en bas de l'ecran.
+
+  CHAT ECRIT
+    - Chat du village (memes regles que le vocal).
+    - Onglet "Meute" : chat SECRET reserve aux loups, utilisable a tout
+      moment (meme en plein jour). Les villageois ne le voient pas.
+
+  LE CONTEUR
+    - Raconte chaque evenement comme une histoire ("La nuit tombe sur le
+      village...", "Au petit matin, on decouvre le corps de...").
+    - Voix de synthese en francais, activable / desactivable (bouton Conteur).
+    - Les revelations privees (voyante) ne sont jamais lues a voix haute.
+
+  CHRONO
+    - Grosse pastille avec le temps restant + barre qui se vide.
+    - Passe au rouge et clignote a 10 s, petit "tic" sonore a 5 s.
+
+  CALEPIN (notes personnelles)
+    - Marquer chaque joueur : Suspect / Doute / Confiance + note courte.
+    - Les marques s'affichent sur les cartes des joueurs.
+    - Notes libres. Visible par soi seul, conserve sur l'appareil.
+
+  JOURNAL
+    - Historique de tous les evenements de la partie.
+
+  AMBIANCE VISUELLE
+    - Salon : ciel de crepuscule violet.
+    - Nuit : tons bleutes, lune qui se leve, etoiles, etoile filante, brume.
+    - Jour : lumiere chaude orangee, soleil.
+    - Silhouette du village dont les fenetres s'allument la nuit.
+    - Ecran de transition "La nuit tombe..." / "Le jour se leve".
+
+  CONFORT
+    - Reconnexion automatique (rechargement de page, reseau instable).
+    - Un joueur par onglet (on peut tester avec plusieurs onglets).
+    - Ecran maintenu allume et vibrations sur mobile.
+
+
+-------------------------------------------------------------------------------
+5. SUR QUELS APPAREILS ?
+-------------------------------------------------------------------------------
+
+  NAVIGATEUR (PC / Mac)
+    Ouvrir l'adresse du jeu dans Chrome, Edge ou Firefox.
+
+  ANDROID
+    Ouvrir l'adresse dans Chrome, puis "Installer l'application".
+
+  IPHONE
+    Ouvrir l'adresse dans Safari, puis Partager > "Sur l'ecran d'accueil".
+
+  WINDOWS
+    Application installable (.exe) generee par GitHub :
+    onglet Actions > "Application Windows" > Run workflow,
+    puis telecharger l'installateur dans les "Artifacts".
+
+
+-------------------------------------------------------------------------------
+6. HEBERGEMENT
+-------------------------------------------------------------------------------
+
+  - Le jeu est heberge sur Render (offre gratuite), deploye depuis la
+    branche "main" du depot GitHub. Chaque mise a jour de "main" est
+    redeployee automatiquement en 2-3 minutes.
+  - Le HTTPS est obligatoire pour le micro (fourni par Render).
+  - Offre gratuite : le serveur s'endort apres 15 min sans visite
+    (premier chargement ~1 min, et les parties en cours sont perdues).
+  - Pour les joueurs en 4G/5G, un serveur TURN peut etre necessaire pour
+    que le vocal passe (variables TURN_URLS, TURN_USERNAME, TURN_CREDENTIAL).
+  - Le vocal est en pair-a-pair : ideal jusqu'a environ 12 joueurs.
+
+
+-------------------------------------------------------------------------------
+7. TECHNIQUE (pour les curieux)
+-------------------------------------------------------------------------------
+
+  - Serveur : Node.js + Express + Socket.IO. Toute la logique du jeu tourne
+    sur le serveur : un joueur ne recoit jamais le role des autres.
+  - Vocal : WebRTC pair-a-pair, le serveur ne fait que la mise en relation.
+  - Client : HTML / CSS / JavaScript sans framework, installable (PWA).
+  - Windows : application Electron.
+  - Tests automatiques : "npm test" (regles du jeu, serveur, chat des loups).
+
+  Fichiers principaux :
+    server/game.js     regles du jeu, phases, qui entend qui
+    server/index.js    serveur et mise en relation vocale
+    public/            interface du jeu (web / mobile)
+    public/voice.js    chat vocal
+    desktop/           application Windows
+    test/              tests
+
+
+-------------------------------------------------------------------------------
+8. IDEES POUR LA SUITE
+-------------------------------------------------------------------------------
+
+  - Nouveaux roles : Cupidon, Petite Fille, Salvateur, Ancien...
+  - Composition des roles et durees reglables par l'hote.
+  - Election du maire.
+  - Sons d'ambiance (hurlement de loup, chant du coq, grillons).
+  - Serveur vocal dedie pour les grandes parties.
+
+===============================================================================
